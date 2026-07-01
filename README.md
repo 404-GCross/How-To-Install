@@ -6,7 +6,7 @@ GPU：Intel HD Graphics 530 @ 1.05 GHz<br>
 RAM：SK Hynix 8G<br>
 
 ## 目的
-给NEC7安装fedora43 KDE，并使其支持RDP远程，用于作为网管机管理自己以及局域网内其他服务器
+给NEC7安装fedora43 KDE Plasma，并使其支持RDP远程，用于作为网管机管理自己以及局域网内其他服务器
 
 ## 开始
 ### 下载fedora43 KDE Plasma
