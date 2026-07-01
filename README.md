@@ -37,6 +37,22 @@ sudo nano /etc/cockpit/disallowed-users
 ```
 用#号将root注释掉，ctrl+x退出并保存即可
 ### 软件安装与配置
+#### 安装Easytier
+拉取easytier二进制程序
+```
+cd /opt/easytier
+wget https://github.com/EasyTier/EasyTier/releases/latest/easytier-linux-x86_64-v2.6.4.zip
+```
+部署web服务端
+```
+./easytier-web-embed \
+    --api-server-port 11211 \
+    --api-host "http://127.0.0.1:11211" \
+    --config-server-port 22020 \
+    --config-server-protocol udp
+```
+
+
 #### 安装Dpanel来管理docker容器
 使用官方的一键脚本
 ```
@@ -158,6 +174,15 @@ networks:
       config:
         - subnet: ${FN_KNOCK_DOCKER_IPV4_SUBNET:-172.30.0.0/16}
         - subnet: ${FN_KNOCK_DOCKER_IPV6_SUBNET:-fd42:fb33:7f7a:100::/64}
+```
+
+
+启动
+```
+docker compose pull
+docker compose up -d
+docker compose ps
+docker compose logs -f fn-knock
 ```
 
 
