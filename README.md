@@ -36,6 +36,7 @@ sudo dnf install nano vim
 sudo nano /etc/cockpit/disallowed-users
 ```
 用#号将root注释掉，ctrl+x退出并保存即可
+### 软件安装与配置
 #### 安装Dpanel来管理docker容器
 使用官方的一键脚本
 ```
@@ -53,9 +54,111 @@ docker run --user $(id -u):$(id -g) -d --restart=unless-stopped -v /etc/openlist
 docker exec -it openlist ./openlist admin set 123456
 ```
 然后网页登录openlist进去修改密码
-#### 配置115网盘
-使用115开放平台接入：
-https://doc.oplist.org.cn/guide/drivers/115_open
+#### 配置网盘
+115网盘使用115开放平台接入：
+https://doc.oplist.org.cn/guide/drivers/115_open <br>
+天翼云盘：https://doc.oplist.org.cn/guide/drivers/189 <br>
+#### 安装Knock敲门
+使用官方最小Docker Compose最小部署教程
+```
+mkdir -p /opt/fn-knock-docker
+cd /opt/fn-knock-docker
+```
+准备.env文件
+```
+sudo nano .env
+```
+```
+FN_KNOCK_IMAGE=kcilnk/fn-knock:latest
+TZ=Asia/Shanghai
+ADMIN_VIEW_PORT=7991
+BACKEND_PORT=7998
+AUTH_PORT=7997
+GO_BACKEND_PORT=7996
+GO_REPROXY_PORT=7999
+FN_KNOCK_DOCKER_IPV4_SUBNET=172.30.0.0/16
+FN_KNOCK_DOCKER_IPV6_SUBNET=fd42:fb33:7f7a:100::/64
+DOCKER_ADMIN_TRUSTED_PROXY_CIDRS=
+DOCKER_DISCOVER_LAN_IP=
+```
+准备compose文件
+```
+nano docker-compose.yml
+```
+```
+services:
+  fn-knock:
+    image: ${FN_KNOCK_IMAGE}
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+      FN_KNOCK_RUNTIME_TARGET: docker
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      FN_KNOCK_DATA_DIR: /var/lib/fn-knock
+      FN_KNOCK_GATEWAY_CONFIG_DIR: /usr/local/etc/fn-knock
+      ADMIN_VIEW_PORT: ${ADMIN_VIEW_PORT:-7991}
+      BACKEND_PORT: ${BACKEND_PORT:-7998}
+      AUTH_PORT: ${AUTH_PORT:-7997}
+      GO_BACKEND_PORT: ${GO_BACKEND_PORT:-7996}
+      GO_REPROXY_PORT: ${GO_REPROXY_PORT:-7999}
+      DOCKER_ADMIN_TRUSTED_PROXY_CIDRS: ${DOCKER_ADMIN_TRUSTED_PROXY_CIDRS:-}
+      DOCKER_DISCOVER_LAN_IP: ${DOCKER_DISCOVER_LAN_IP:-}
+      DDNS_HOST_IF_INET6_PATH: /host/proc/net/if_inet6
+      ADMIN_VIEW_HOST: 0.0.0.0
+      BACKEND_HOST: 127.0.0.1
+    ports:
+      - "${ADMIN_VIEW_PORT:-7991}:${ADMIN_VIEW_PORT:-7991}"
+      - "${GO_REPROXY_PORT:-7999}:${GO_REPROXY_PORT:-7999}"
+    networks:
+      - fn_knock_net
+    volumes:
+      - fn_knock_data:/var/lib/fn-knock
+      - fn_knock_gateway:/usr/local/etc/fn-knock
+      - /proc/1/net:/host/proc/net:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS http://127.0.0.1:${ADMIN_VIEW_PORT:-7991}/api/admin/healthz || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  redis:
+    image: redis:7-bookworm
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Shanghai}
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - fn_knock_net
+    volumes:
+      - fn_knock_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  fn_knock_data:
+  fn_knock_gateway:
+  fn_knock_redis:
+
+networks:
+  fn_knock_net:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: ${FN_KNOCK_DOCKER_IPV4_SUBNET:-172.30.0.0/16}
+        - subnet: ${FN_KNOCK_DOCKER_IPV6_SUBNET:-fd42:fb33:7f7a:100::/64}
+```
 
 
 
@@ -63,7 +166,9 @@ https://doc.oplist.org.cn/guide/drivers/115_open
 
 
 ## 本篇涉及的项目：<br>
-https://github.com/donknap/dpanel
-https://github.com/OpenListTeam/OpenList
+https://github.com/donknap/dpanel <br>
+https://github.com/OpenListTeam/OpenList <br>
+https://github.com/kci-lnk/fn-knock-turborepo <br>
+
 
 
