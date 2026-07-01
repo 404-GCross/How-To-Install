@@ -36,4 +36,34 @@ sudo dnf install nano vim
 sudo nano /etc/cockpit/disallowed-users
 ```
 用#号将root注释掉，ctrl+x退出并保存即可
+#### 安装Dpanel来管理docker容器
+使用官方的一键脚本
+```
+curl -sSL https://dpanel.cc/quick.sh | bash
+```
+运行后跟随指引安装就行。
+#### 安装openlist用于管理网盘映射
+```
+mkdir -p /etc/openlist
+docker run --user $(id -u):$(id -g) -d --restart=unless-stopped -v /etc/openlist:/opt/openlist/data -p 5244:5244 -e UMASK=022 --name="openlist" openlistteam/openlist:latest
+```
+反正只用来映射网盘，直接照抄官方配置<br>
+部署完之后直接用命令修改默认密码
+```
+docker exec -it openlist ./openlist admin set 123456
+```
+然后网页登录openlist进去修改密码
+#### 配置115网盘
+使用115开放平台接入：
+https://doc.oplist.org.cn/guide/drivers/115_open
+
+
+
+
+
+
+## 本篇涉及的项目：<br>
+https://github.com/donknap/dpanel
+https://github.com/OpenListTeam/OpenList
+
 
