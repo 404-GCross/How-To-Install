@@ -1,4 +1,4 @@
-# 本分支用于记录本人给自己的Wyse 5070瘦客户机安装配置fedora 43 Server
+# Wyse5070安装fedora43 Server
 ## 机器配置
 主机：Wyse 5070 Thin Client <br>
 CPU：Intel(R) Celeron(R) J4105 (4) @ 2.50 GHz <br>
