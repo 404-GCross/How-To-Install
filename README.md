@@ -20,6 +20,10 @@ Ventoy项目地址：https://github.com/ventoy/Ventoy<br>
 #### 更换镜像源
 使用一键脚本更换软件源，选择中科大镜像并进行软件源更新
 ```
+#如果是root就不需要这条命令
+sudo -i 
+```
+```
 bash <(curl -sSL https://linuxmirrors.cn/main.sh)
 ```
 紧接着用一键脚本更换docker源
@@ -38,19 +42,43 @@ sudo nano /etc/cockpit/disallowed-users
 用#号将root注释掉，ctrl+x退出并保存即可
 ### 软件安装与配置
 #### 安装Easytier
-拉取easytier二进制程序
+拉取我自己构建的easytier-web-embed docker镜像
 ```
-cd /opt/easytier
-wget https://github.com/EasyTier/EasyTier/releases/latest/easytier-linux-x86_64-v2.6.4.zip
+cd /opt
+git clone -b docker-web-embed --single-branch https://github.com/404-GCross/EasyTier.git easytier-docker
+cd easytier-docker
 ```
-部署web服务端
+部署镜像
 ```
-./easytier-web-embed \
-    --api-server-port 11211 \
-    --api-host "http://127.0.0.1:11211" \
-    --config-server-port 22020 \
-    --config-server-protocol udp
+docker build -f Dockerfile.web-embed -t easytier-web-embed .
 ```
+启动容器
+```
+docker run -d \
+  --name easytier-web \
+  --restart unless-stopped \
+  -p 11211:11211 \
+  -p 22020:22020/udp \
+  -v easytier-data:/app \
+  easytier-web-embed
+```
+接着机器安装easytier-core容器
+```
+docker run --name easytier-core -d \
+    --network host \
+    -e TZ=Asia/Shanghai \
+    -v /etc/machine-id:/etc/machine-id \
+    --privileged \
+    --restart=always \
+    easytier/easytier:latest \
+    -w udp://127.0.0.1:22020/yourusername
+```
+根据自己需求替换掉其中的yourusername，运行命令即可完成部署。
+然后用http://<对应的IP>:11211来访问网页控制台
+![alt text](image.png)
+将里面的localhost替换为登录该web界面用的IP，然后输入点击Register输入账号密码注册，如果API Host不正确验证码图片是加载不出来的<br>
+注册完成后在login界面输入刚刚注册的账号密码登录<br>
+登录之后点击左侧的Device List，如果部署正确则会有一台设备连接上，点击齿轮对其进行配置下发就可以了，这里就不赘述了。
 
 
 #### 安装Dpanel来管理docker容器
@@ -74,6 +102,8 @@ docker exec -it openlist ./openlist admin set 123456
 115网盘使用115开放平台接入：
 https://doc.oplist.org.cn/guide/drivers/115_open <br>
 天翼云盘：https://doc.oplist.org.cn/guide/drivers/189 <br>
+
+
 #### 安装Knock敲门
 使用官方最小Docker Compose最小部署教程
 ```
@@ -181,6 +211,9 @@ networks:
 ```
 docker compose pull
 docker compose up -d
+```
+如果发现连不上就看日志排障
+```
 docker compose ps
 docker compose logs -f fn-knock
 ```
