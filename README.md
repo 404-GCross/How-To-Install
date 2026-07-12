@@ -217,6 +217,12 @@ docker compose up -d
 docker compose ps
 docker compose logs -f fn-knock
 ```
+### 安装uptime-kuma
+直接运行下面这行命令
+```
+docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2
+```
+然后用服务器IP:3001登录即可
 
 
 
